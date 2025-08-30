@@ -24,6 +24,17 @@
 #'
 #' @return A `data.frame`.
 #' @export
+#'
+#' @examples
+#' \donttest{
+#' if(requireNamespace("geneset",quietly = TRUE)){
+#' # only gene ids
+#' data(geneList, package = "genekitr")
+#' gs <- geneset::getGO(org = "human",ont = "mf",data_dir = tempdir())
+#' gse <- genGSEA(genelist = geneList, geneset = gs)
+#'   }
+#'}
+
 genGSEA <- function(genelist,
                     geneset,
                     padj_method = "BH",
@@ -31,44 +42,47 @@ genGSEA <- function(genelist,
                     q_cutoff = 0.05,
                     min_gset_size = 10,
                     max_gset_size = 500,
-                    set_seed = FALSE) {
+                    set_seed = FALSE){
+
   #--- args ---#
   id <- as.character(names(genelist))
-  if (missing(geneset)) stop("Please provide gene set...\nWe recommend to use package `geneset` to select available gene set or make new one.")
+  if(missing(geneset)) stop('Please provide gene set...\nWe recommend to use package `geneset` to select available gene set or make new one.')
 
   genesetType <- geneset$type
-  transToSym <- ifelse(genesetType %in% c("enrichrdb", "bp", "mf", "cc", "covid19"), TRUE, FALSE)
+  transToSym <- ifelse(genesetType %in% c("enrichrdb","bp",'mf','cc',"covid19"), TRUE, FALSE)
 
   org <- geneset$organism
   rareOrg <- TRUE
 
   tryCatch(
     {
-      ens_org <- tryCatch(mapEnsOrg(org), error = function(e) NULL)
-      if (is.null(ens_org)) stop("Please make sure the gene types of genelist and geneset are the same.")
+      ens_org <- tryCatch( mapEnsOrg(org), error = function(e) NULL)
+      if(is.null(ens_org)) stop('Please make sure the gene types of genelist and geneset are the same.')
       keyType <- gentype(id = id, org = ens_org)
 
       #--- initialize ---#
       # input id must be symbol or entrezid for c gene sets
 
-      if (transToSym) {
+      if(transToSym){
         id_dat <- suppressMessages(transId(id, "symbol", ens_org, unique = T))
-        genelist <- genelist[names(genelist) %in% id_dat$input_id]
+        genelist <- genelist[names(genelist)%in%id_dat$input_id]
         names(genelist) <- id_dat$symbol
-      } else if (keyType != "ENTREZID") {
+      }else if(keyType != "ENTREZID"){
         id_dat <- suppressMessages(transId(id, "entrezid", ens_org, unique = T))
-        genelist <- genelist[names(genelist) %in% id_dat$input_id]
+        genelist <- genelist[names(genelist)%in%id_dat$input_id]
         names(genelist) <- id_dat$entrezid
-      } else if (keyType == "ENTREZID") {
+      }else if(keyType == "ENTREZID"){
         id_dat <- suppressMessages(transId(id, "symbol", ens_org, unique = T)) %>%
-          dplyr::relocate(input_id, .after = symbol)
-        genelist <- genelist[names(genelist) %in% id_dat$input_id]
+          dplyr::relocate(input_id,.after = symbol)
+        genelist <- genelist[names(genelist)%in%id_dat$input_id]
         # id <- id_dat$input_id
       }
+
     },
     error = function(e) {
       ens_org <- org
       transToSym <- FALSE
+
     }
   )
 
@@ -86,18 +100,17 @@ genGSEA <- function(genelist,
       TERM2GENE = geneset$geneset,
       TERM2NAME = geneset$geneset_name,
       exponent = 1,
-      eps = 0,
+      eps  = 0,
       verbose = FALSE,
       seed = set_seed,
-      by = "fgsea"
-    )
-  )
+      by = 'fgsea'
+    ))
 
 
   #--- post-process ---#
   if (nrow(as.data.frame(fcs)) == 0) {
     stop("No terms enriched ...")
-  } else {
+  }else{
     exponent <- fcs@params[["exponent"]]
     fcs <- fcs %>%
       as.data.frame() %>%
@@ -107,72 +120,92 @@ genGSEA <- function(genelist,
   }
 
   ## transToSym means geneset in "enrichrdb","go" and "covid19"
-  if (!transToSym && !rareOrg) {
+  if(!transToSym && !rareOrg){
     # part 1-1
-    if (keyType != "SYMBOL") {
+    if(keyType != "SYMBOL"){
       # part 1-1-1
-      if (keyType == "ENTREZID") {
-        new_geneID <- get_symbol(fcs$geneID, ens_org)
+      if(keyType == 'ENTREZID'){
+        new_geneID <- get_symbol(fcs$geneID,ens_org)
         new_fcs <- fcs %>%
           dplyr::mutate(geneID_symbol = new_geneID) %>%
           dplyr::relocate(geneID_symbol, .after = geneID)
-      } else {
+      }else{
         # part 1-1-2
-        old_geneID <- replace_id(id_dat, fcs$geneID)
-        new_geneID <- get_symbol(fcs$geneID, ens_org)
+        old_geneID <- replace_id(id_dat,fcs$geneID)
+        new_geneID <- get_symbol(fcs$geneID,ens_org)
         new_fcs <- fcs %>%
           dplyr::mutate(geneID_symbol = new_geneID) %>%
           dplyr::mutate(geneID = old_geneID) %>%
           dplyr::relocate(geneID_symbol, .after = geneID)
       }
       # part 1-2
-    } else {
+    }else{
       # new_fcs <- fcs
-      old_geneID <- replace_id(id_dat, fcs$geneID)
+      old_geneID <- replace_id(id_dat,fcs$geneID)
       # new_geneID <- get_symbol(fcs$geneID,ens_org)
       new_fcs <- fcs %>%
         dplyr::mutate(geneID = old_geneID)
     }
 
     # part 2
-  } else if (!rareOrg) {
+  }else if(!rareOrg){
     # part 2-1
-    if (keyType != "SYMBOL") {
-      old_geneID <- replace_id(id_dat, fcs$geneID)
+    if(keyType != "SYMBOL" ){
+      old_geneID <- replace_id(id_dat,fcs$geneID)
       new_fcs <- fcs %>%
         dplyr::mutate(geneID_symbol = geneID) %>%
         dplyr::mutate(geneID = old_geneID) %>%
         dplyr::relocate(geneID_symbol, .after = geneID)
-    } else {
+    }else{
       # part 2-2
       new_fcs <- fcs
     }
-  } else {
+
+  }else{
     new_fcs <- fcs
   }
 
   ## modify id column name for GO
-  if (!rareOrg) {
+  if(!rareOrg){
     bioc_org <- ensOrg_name %>%
       dplyr::filter(tolower(latin_short_name) %in% geneset$organism) %>%
       dplyr::pull(bioc_name) %>%
       stringr::str_to_sentence()
   }
 
-  if (genesetType %in% c("bp", "cc", "mf") && !rareOrg) {
-    colnames(new_fcs)[1] <- paste0(bioc_org, "_", toupper(genesetType), "_ID")
-  } else if (genesetType %in% c("bp", "cc", "mf") && rareOrg) {
-    colnames(new_fcs)[1] <- paste0(org, "_", toupper(genesetType), "_ID")
+  if(genesetType %in% c('bp','cc','mf') && !rareOrg){
+    colnames(new_fcs)[1] = paste0(bioc_org,'_',toupper(genesetType),'_ID')
+  }else if(genesetType %in% c('bp','cc','mf') && rareOrg){
+    colnames(new_fcs)[1] = paste0(org,'_',toupper(genesetType),'_ID')
   }
 
+  geneAll <- sapply(1:nrow(new_fcs),function(x){
+    gset_nm <- new_fcs$ID[x]
+    # gset_gene <- geneset$geneset %>% filter(.[[1]] == gset_nm) %>% pull(2)
+    gset_gene <- geneset$geneset[geneset$geneset[,1] %in% gset_nm,2]
+    ov_genes <- intersect(gset_gene, names(genelist)) %>% paste0(.,collapse = '/')
+    ov_genes_len <- length(ov_genes)
+    return(ov_genes)
+  })
+
+  geneAll_len <- sapply(1:length(geneAll), function(x){
+    gl <- geneAll[x] %>% strsplit('\\/') %>% unlist() %>% length()
+  })
+
+  new_fcs <- new_fcs %>% dplyr::rename(core_enriched_geneID = geneID, core_enriched_count = Count) %>%
+    mutate(all_enriched_geneID = geneAll, all_enriched_count = geneAll_len)
+
   ## save as list
-  genelist_df <- data.frame(ID = names(genelist), logfc = genelist)
-  exponent <- data.frame(exponent = exponent)
-  org <- data.frame(org = org)
+  genelist_df = data.frame(ID = names(genelist), logfc = genelist)
+  exponent = data.frame(exponent = exponent)
+  org = data.frame(org = org)
   new_geneset <- geneset$geneset
 
-  res <- list(gsea_df = new_fcs, genelist = genelist_df, geneset = new_geneset, exponent = exponent, org = org)
+  res <- list(gsea_df = new_fcs, genelist = genelist_df, geneset = new_geneset,  exponent = exponent, org = org)
 
 
   return(res)
+
 }
+
+
