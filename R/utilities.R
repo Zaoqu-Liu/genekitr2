@@ -10,42 +10,42 @@
 #---  get msigdb org ---#
 msigdb_org_data <- function() {
   .initial()
-  utils::data(list = "msig_org", package = "genekitr2", envir = .genekitrEnv)
+  utils::data(list = "msig_org", package = "genekitr",envir = .genekitrEnv)
   get("msig_org", envir = .genekitrEnv)
 }
 
 #---  get msigdb org ---#
 msigdb_category_data <- function() {
   .initial()
-  utils::data(list = "msig_category", package = "genekitr2", envir = .genekitrEnv)
+  utils::data(list = "msig_category", package = "genekitr",envir = .genekitrEnv)
   get("msig_category", envir = .genekitrEnv)
 }
 
 #--- bioc org name data ---#
 biocOrg_name_data <- function() {
   .initial()
-  utils::data(list = "biocOrg_name", package = "genekitr2", envir = .genekitrEnv)
+  utils::data(list = "biocOrg_name", package = "genekitr",envir = .genekitrEnv)
   get("biocOrg_name", envir = .genekitrEnv)
 }
 
 #---  kegg org name data ---#
 keggOrg_name_data <- function() {
   .initial()
-  utils::data(list = "keggOrg_name", package = "genekitr2", envir = .genekitrEnv)
+  utils::data(list = "keggOrg_name", package = "genekitr",envir = .genekitrEnv)
   get("keggOrg_name", envir = .genekitrEnv)
 }
 
 #--- ensembl org name data ---#
 ensOrg_name_data <- function() {
   .initial()
-  utils::data(list = "ensOrg_name", package = "genekitr2", envir = .genekitrEnv)
+  utils::data(list = "ensOrg_name", package = "genekitr",envir = .genekitrEnv)
   get("ensOrg_name", envir = .genekitrEnv)
 }
 
 #--- probe platform data ---#
 hsapiens_probe_data <- function() {
   .initial()
-  utils::data(list = "hsapiens_probe_platform", package = "genekitr2", envir = .genekitrEnv)
+  utils::data(list = "hsapiens_probe_platform", package = "genekitr",envir = .genekitrEnv)
   get("hsapiens_probe_platform", envir = .genekitrEnv)
 }
 
@@ -85,7 +85,7 @@ mapBiocOrg <- function(organism) {
 #---  get organism KEGG shortname ---#
 mapKeggOrg <- function(organism) {
   organism <- tolower(organism)
-  if (organism == "hg" | organism == "human" | organism == "hs" | organism == "hsapiens") organism <- "hsa"
+  if (organism == "hg" | organism == "human" | organism == "hs" | organism == "hsapiens" ) organism <- "hsa"
   if (organism == "mm" | organism == "mouse" | organism == "mmusculus") organism <- "mmu"
   if (organism == "rn" | organism == "rat") organism <- "rno"
 
@@ -99,7 +99,7 @@ mapKeggOrg <- function(organism) {
   if ((organism %in% kgorg$short_name && !is.common)) {
     org <- organism
   } else if (nchar(organism) >= 3) {
-    out <- kgorg[grepl(paste0("(\\b", organism, "\\b)"), kgorg$full_name, ignore.case = T), ]
+    out <- kgorg[grepl(paste0("(\\b", organism, "\\b)"), kgorg$full_name,ignore.case = T), ]
     if (nrow(out) > 1) {
       stop(
         "\nPlease choose the SHORT NAME from below: \n",
@@ -111,7 +111,7 @@ mapKeggOrg <- function(organism) {
       stop("\nCheck the organism name again!")
     }
   } else {
-    out <- kgorg[grepl(paste0("^", organism, ""), kgorg$short_name, ignore.case = T), ]
+    out <- kgorg[grepl(paste0("^", organism, ""), kgorg$short_name,ignore.case = T), ]
     if (nrow(out) != 0) {
       stop(
         "\nPlease choose the SHORT NAME from below: \n",
@@ -165,7 +165,7 @@ mapEnsOrg <- function(organism) {
       dplyr::filter(eval(parse(text = colnames(.)[check_all])) %in% organism) %>%
       dplyr::pull(latin_short_name)
   } else {
-    stop("\nCheck the latin_short_name in `genekitr2::ensOrg_name`")
+    stop("\nCheck the latin_short_name in `genekitr::ensOrg_name`")
   }
 
   return(org)
@@ -179,14 +179,14 @@ web.url <- "https://genekitr-china.oss-accelerate.aliyuncs.com"
 #--- ensembl anno data ---#
 # options(geneset.download.method = "wininet")
 ensAnno <- function(org, download.method = NULL, hgVersion) {
-  if (hgVersion == "v38") {
+  if(hgVersion == 'v38'){
     org <- mapEnsOrg(tolower(org))
-  } else {
+  }else{
     org <- mapEnsOrg(tolower(org))
-    org <- paste0(org, "_v19")
+    org <- paste0(org,'_v19')
   }
 
-  data_dir <- tools::R_user_dir("genekitr2", which = "data")
+  data_dir <- tools::R_user_dir("genekitr", which = "data")
   sub_dir <- "/info/gene/"
   data_dir <- paste0(data_dir, sub_dir)
   make_dir(data_dir)
@@ -195,15 +195,14 @@ ensAnno <- function(org, download.method = NULL, hgVersion) {
   destfile <- paste0(data_dir, org, "_anno.fst")
   web_f_size <- check_web_size(url)
   local_f_size <- file.size(destfile)
-  if (is.na(local_f_size)) local_f_size <- 0
+  if(is.na(local_f_size)) local_f_size = 0
 
-  genekitr_download(url, destfile,
-    method = download.method,
-    data_dir, web_f_size, local_f_size
-  )
+  genekitr_download(url, destfile, method = download.method,
+                    data_dir, web_f_size, local_f_size)
 
   dat <- suppressMessages(fst::read.fst(destfile))
   invisible(dat)
+
 }
 
 #--- probe anno data ---#
@@ -213,7 +212,7 @@ probAnno <- function(org, download.method = NULL) {
   if (org == "rn" | org == "rat") org <- "rnorvegicus"
   if (!org %in% c("hsapiens", "mmusculus", "rnorvegicus")) stop('We only support "human", "mouse" and "rat".')
 
-  data_dir <- tools::R_user_dir("genekitr2", which = "data")
+  data_dir <- tools::R_user_dir("genekitr", which = "data")
   sub_dir <- "/info/probe/"
   data_dir <- paste0(data_dir, sub_dir)
   make_dir(data_dir)
@@ -222,12 +221,10 @@ probAnno <- function(org, download.method = NULL) {
   destfile <- paste0(data_dir, "/", org, "_anno.fst")
   web_f_size <- check_web_size(url)
   local_f_size <- file.size(destfile)
-  if (is.na(local_f_size)) local_f_size <- 0
+  if(is.na(local_f_size)) local_f_size = 0
 
-  genekitr_download(url, destfile,
-    method = download.method,
-    data_dir, web_f_size, local_f_size
-  )
+  genekitr_download(url, destfile, method = download.method,
+                   data_dir, web_f_size, local_f_size)
 
   dat <- suppressMessages(fst::read.fst(destfile))
   invisible(dat)
@@ -235,15 +232,15 @@ probAnno <- function(org, download.method = NULL) {
 
 #--- keytype order data ---#
 getOrder <- function(org, keytype, download.method = NULL, hgVersion) {
-  if (hgVersion == "v38") {
+  if(hgVersion == 'v38'){
     org <- mapEnsOrg(tolower(org))
-  } else {
+  }else{
     org <- mapEnsOrg(tolower(org))
-    org <- paste0(org, "_v19")
+    org <- paste0(org,'_v19')
   }
 
 
-  data_dir <- tools::R_user_dir("genekitr2", which = "data")
+  data_dir <- tools::R_user_dir("genekitr", which = "data")
   sub_dir <- "/info/gene/"
   data_dir <- paste0(data_dir, sub_dir)
   make_dir(data_dir)
@@ -252,12 +249,10 @@ getOrder <- function(org, keytype, download.method = NULL, hgVersion) {
   destfile <- paste0(data_dir, "/", org, "_", keytype, "_order.fst")
   web_f_size <- check_web_size(url)
   local_f_size <- file.size(destfile)
-  if (is.na(local_f_size)) local_f_size <- 0
+  if(is.na(local_f_size)) local_f_size = 0
 
-  genekitr_download(url, destfile,
-    method = download.method,
-    data_dir, web_f_size, local_f_size
-  )
+  genekitr_download(url, destfile, method = download.method,
+                    data_dir, web_f_size, local_f_size)
 
   dat <- suppressMessages(fst::read.fst(destfile))
   invisible(dat)
@@ -266,7 +261,7 @@ getOrder <- function(org, keytype, download.method = NULL, hgVersion) {
 #############################
 ### Part IV: function of geninfo
 #############################
-make_dir <- function(data_dir) {
+make_dir <- function(data_dir){
   if (!dir.exists(data_dir)) {
     tryCatch(
       {
@@ -285,7 +280,7 @@ make_dir <- function(data_dir) {
 }
 
 #--- get web server file size ---#
-check_web_size <- function(url) {
+check_web_size <- function(url){
   web_f_size <- RCurl::getURL(url, nobody = 1L, header = 1L) %>%
     strsplit("\r\n") %>%
     unlist() %>%
@@ -303,69 +298,63 @@ check_web_size <- function(url) {
 # method: "auto" (default), "wininet" (for windows)
 # web_f_size: file size on webserver
 # local_f_size: file size in local
-genekitr_download <- function(url, destfile, data_dir,
-                              method, web_f_size, local_f_size) {
+genekitr_download <- function(url, destfile,data_dir,
+                             method, web_f_size, local_f_size){
   if (!file.exists(destfile)) {
     # message("Initializing, please wait (just once)...")
     if (is.null(method)) method <- getOption("genekitr.download.method")
 
     if (!is.null(method) && method != "auto") {
       tryCatch(utils::download.file(url, destfile, quiet = TRUE, method = method, mode = "wb"),
-        error = function(e) {
-          message(paste0(
-            "Auto download failed...\nPlease download via: ", url,
-            "\nThen save to: ", data_dir, "\n"
-          ))
-        }
-      )
-    } else {
-      tryCatch(utils::download.file(url, destfile, quiet = TRUE, method = "auto", mode = "wb"),
-        error = function(e) {
-          message(paste0(
-            "Auto download failed...\nPlease download manually via: ", url,
-            "\nThen save to: ", data_dir, "\n"
-          ))
-        }
+               error = function(e) {
+                 message(paste0(
+                   "Auto download failed...\nPlease download via: ", url,
+                   "\nThen save to: ", data_dir, "\n"
+                 ))
+               })
+    }else{
+      tryCatch(utils::download.file(url, destfile, quiet = TRUE,method = 'auto', mode = "wb"),
+               error = function(e) {
+                 message(paste0(
+                   "Auto download failed...\nPlease download manually via: ", url,
+                   "\nThen save to: ", data_dir, "\n"
+                 ))
+               }
       )
     }
   } else if (web_f_size != local_f_size) {
     message("Detected new version data, updating...")
     if (!is.null(method) && method != "auto") {
       tryCatch(utils::download.file(url, destfile, quiet = TRUE, method = method, mode = "wb"),
-        error = function(e) {
-          message(paste0(
-            "Auto download failed...\nPlease download manually via: ", url,
-            "\nThen save to: ", data_dir, "\n"
-          ))
-        }
-      )
-    } else {
-      tryCatch(utils::download.file(url, destfile, quiet = TRUE, method = "auto", mode = "wb"),
-        error = function(e) {
-          message(paste0(
-            "Auto download failed...\nPlease download manually via: ", url,
-            "\nThen save to: ", data_dir, "\n"
-          ))
-        }
+               error = function(e) {
+                 message(paste0(
+                   "Auto download failed...\nPlease download manually via: ", url,
+                   "\nThen save to: ", data_dir, "\n"
+                 ))
+               })
+    }else{
+      tryCatch(utils::download.file(url, destfile, quiet = TRUE,method = 'auto', mode = "wb"),
+               error = function(e) {
+                 message(paste0(
+                   "Auto download failed...\nPlease download manually via: ", url,
+                   "\nThen save to: ", data_dir, "\n"
+                 ))
+               }
       )
     }
   }
 }
 
 #---  decide gene id type ---#
-#' @param id Gene id (symbol, ensembl or entrez id) or uniprot id. If this argument is NULL, return all gene info.
-#' @param org Latin organism shortname from `ensOrg_name`. Default is human.
-#' @param hgVersion Select human genome build version from "v38" (default) and "v19".
-#' @export
-gentype <- function(id, data = NULL, org, hgVersion = "v38") {
+gentype <- function(id, data = NULL, org, hgVersion='v38') {
   org <- mapEnsOrg(org)
-  if (is.null(data)) data <- ensAnno(org, hgVersion = hgVersion)
+  if (is.null(data)) data <- ensAnno(org,hgVersion = hgVersion)
 
   if ("symbol" %in% colnames(data)) {
     data_symbol_normal <- data$symbol %>% stringi::stri_remove_empty_na()
     data_symbol_lower <- tolower(data_symbol_normal)
     data_symbol_upper <- toupper(data_symbol_normal)
-    n_sym <- sum(id %in% data_symbol_normal | tolower(id) %in% data_symbol_lower | toupper(id) %in% data_symbol_upper)
+    n_sym <- sum(id %in% data_symbol_normal |  tolower(id) %in% data_symbol_lower | toupper(id) %in% data_symbol_upper)
   } else {
     n_sym <- 0L
   }
@@ -423,8 +412,8 @@ gentype <- function(id, data = NULL, org, hgVersion = "v38") {
     stop("Wrong organism or input id has no match!")
   } else {
     check <- which(c(n_sym, n_ens, n_ent, n_uni, n_ala, n_e_ala) %in%
-      max(n_sym, n_ens, n_ent, n_uni, n_ala, n_e_ala))
-    typ <- c("SYMBOL", "ENSEMBL", "ENTREZID", "UNIPROT", "SYMBOL", "SYMBOL")[check] %>% unique()
+                     max(n_sym, n_ens, n_ent, n_uni, n_ala, n_e_ala))
+    typ <- c("SYMBOL", "ENSEMBL", "ENTREZID", "UNIPROT", "SYMBOL","SYMBOL")[check] %>% unique()
   }
 
   return(typ)
@@ -441,16 +430,20 @@ calcFoldEnrich <- function(df) {
     check_bg <- which(grepl(".*bg*ratio", tolower(colnames(df))))
     to_calc <- paste0("(", df[, check_gr], ")/(", df[, check_bg], ")")
 
-    df <- df %>%
-      dplyr::mutate(FoldEnrich = sapply(to_calc, function(x) eval(parse(text = x))))
+    if(any(grepl("foldenrich", colnames(df),ignore.case = T))){
+      colnames(df)[grepl("foldenrich", colnames(df),ignore.case = T)] = 'FoldEnrich'
+    }else{
+      df <- df %>%
+        dplyr::mutate(FoldEnrich = sapply(to_calc, function(x) eval(parse(text = x))))
+    }
+
+
   }
   return(df)
 }
 
-get_symbol <- function(id, org) {
-  ori_id <- stringr::str_split(id, "\\/") %>%
-    unlist() %>%
-    unique()
+get_symbol <- function(id,org){
+  ori_id <- stringr::str_split(id, "\\/") %>% unlist() %>% unique()
   id_all <- suppressMessages(transId(ori_id, "symbol", org, unique = T))
 
   new_geneID <- stringr::str_split(id, "\\/") %>%
@@ -464,29 +457,21 @@ get_symbol <- function(id, org) {
   return(new_geneID)
 }
 
-replace_id <- function(dat, id) {
+replace_id <- function(dat, id){
   new_id <- stringr::str_split(id, "\\/") %>% unlist()
-  check <- any(new_id %in% dat[, 2])
-  if (check) {
+  check <- any(new_id%in%dat[,2])
+  if(check){
     stringr::str_split(id, "\\/") %>%
       lapply(., function(x) {
-        dat %>%
-          dplyr::filter(.[[2]] %in% x) %>%
-          dplyr::pull(1) %>%
-          paste0(., collapse = "/")
-      }) %>%
-      do.call(rbind, .) %>%
-      as.character()
-  } else {
+        dat %>% dplyr::filter(.[[2]]%in%x) %>% dplyr::pull(1) %>%
+          paste0(.,collapse = '/')
+      }) %>%  do.call(rbind,.) %>% as.character()
+  }else{
     stringr::str_split(id, "\\/") %>%
       lapply(., function(x) {
-        dat %>%
-          dplyr::filter(.[[1]] %in% x) %>%
-          dplyr::pull(2) %>%
-          paste0(., collapse = "/")
-      }) %>%
-      do.call(rbind, .) %>%
-      as.character()
+        dat %>% dplyr::filter(.[[1]]%in%x) %>% dplyr::pull(2) %>%
+          paste0(.,collapse = '/')
+      }) %>%  do.call(rbind,.) %>% as.character()
   }
 }
 
@@ -505,7 +490,7 @@ utils::globalVariables(c(
   "FoldEnrich", "GeneRatio", "fct_reorder", "geom_col", "scale_fill_discrete",
   "scale_size", "scale_x_continuous", "sec_axis", "everything", "gene", "coord_flip",
   "expansion", "index", "nes.group", "padj.group", "change", "label", "logFC", "stat", "pvalue",
-  "cluster", "Cluster", "go", "Bioc_anno", "Platform", "ensembl", "ensembl_id", "probe_id",
-  "hsapiens_probe_platform", "new_x", "old_id", "entrezid", "bioc_name", ".genekitrEnv", "Ontology", "venn_percent",
+  "cluster","Cluster", "go", "Bioc_anno", "Platform", "ensembl", "ensembl_id", "probe_id",
+  "hsapiens_probe_platform", "new_x","old_id","entrezid","bioc_name",".genekitrEnv","Ontology","venn_percent",
   "input_id2"
 ))
