@@ -9,20 +9,18 @@
 #' @export
 
 importCP <- function(object,
-                     type = c("go", "gsea", "other")) {
+                     type = c('go','gsea','other')) {
   type <- match.arg(type)
 
   #--- IMPORT GO ---#
-  if (type == "go") {
+  if(type == 'go'){
     ont <- object@ontology
     org <- mapEnsOrg(object@organism)
     ensorg_data <- ensOrg_name_data()
-    bioc_org <- ensorg_data[ensorg_data$latin_full_name == object@organism, "bioc_name"]
+    bioc_org <- ensorg_data[ensorg_data$latin_full_name == object@organism, 'bioc_name']
 
     ego <- as.data.frame(object)
-    id <- strsplit(ego$geneID, "\\/") %>%
-      unlist() %>%
-      unique()
+    id <- strsplit(ego$geneID,'\\/') %>% unlist() %>% unique()
 
     old_id <- id
     keyType <- gentype(id = id, org = org)
@@ -33,16 +31,17 @@ importCP <- function(object,
 
     ### get geneID_symbol
     # new id
-    new_geneID <- get_symbol(ego$geneID, org)
+    new_geneID <- get_symbol(ego$geneID,org)
 
     # input SYMBOL and no alias
-    if (keyType == "SYMBOL" & identical(old_id, id)) {
+    if( keyType == "SYMBOL" & identical(old_id, id) ){
       new_ego <- ego %>%
         calcFoldEnrich() %>%
         as.enrichdat()
-    } else if (keyType == "SYMBOL" & !identical(old_id, id)) {
+
+    } else if(keyType == "SYMBOL" & !identical(old_id, id) ){
       # input SYMBOL and have alias
-      old_geneID <- replace_id(id_dat, ego$geneID)
+      old_geneID <- replace_id(id_dat,ego$geneID)
 
       new_ego <- ego %>%
         dplyr::mutate(geneID = old_geneID) %>%
@@ -66,23 +65,25 @@ importCP <- function(object,
   }
 
   #--- IMPORT GSEA ---#
-  if (type == "gsea") {
+  if(type == 'gsea'){
+    if(!requireNamespace("reshape2",quietly = TRUE))
+      stop("Package \"reshape2\" needed for this function to work.
+         Please install it by install.packages('reshape2')",call. = FALSE)
+
     egmt <- object
     ens_org <- mapEnsOrg(object@organism)
     exponent <- egmt@params[["exponent"]]
     geneset <- egmt@geneSets %>%
       reshape2::melt() %>%
-      stats::setNames(c("entrez_gene", "gs_name")) %>%
-      dplyr::relocate(gs_name, .before = dplyr::everything())
+      stats::setNames(c('entrez_gene','gs_name')) %>%
+      dplyr::relocate(gs_name,.before = dplyr::everything())
 
-    genelist <- egmt@geneList
+    genelist = egmt@geneList
     egmt <- egmt %>%
       as.data.frame() %>%
       as.enrichdat() %>%
       dplyr::select(-GeneRatio)
-    id <- strsplit(egmt$geneID, "\\/") %>%
-      unlist() %>%
-      unique()
+    id <- strsplit(egmt$geneID,'\\/') %>% unlist() %>% unique()
 
     old_id <- id
     keyType <- gentype(id = id, org = ens_org)
@@ -97,18 +98,19 @@ importCP <- function(object,
 
     ### get geneID_symbol
     # new id
-    new_geneID <- get_symbol(egmt$geneID, ens_org)
+    new_geneID <- get_symbol(egmt$geneID,ens_org)
 
     # input SYMBOL and no alias
-    if (keyType == "SYMBOL" & identical(old_id, id)) {
+    if( keyType == "SYMBOL" & identical(old_id, id) ){
       egmt <- egmt %>%
         dplyr::mutate(geneID = new_geneID) %>%
         # dplyr::relocate(geneID, .after = geneID) %>%
         calcFoldEnrich() %>%
         as.enrichdat()
-    } else if (keyType == "SYMBOL" & !identical(old_id, id)) {
-      old_geneID <- replace_id(id_dat2, egmt$geneID) %>%
-        replace_id(id_dat1, .)
+
+    } else if(keyType == "SYMBOL" & !identical(old_id, id)){
+      old_geneID <- replace_id(id_dat2,egmt$geneID) %>%
+        replace_id(id_dat1,.)
 
       egmt <- egmt %>%
         dplyr::mutate(geneID = old_geneID) %>%
@@ -116,15 +118,17 @@ importCP <- function(object,
         dplyr::relocate(geneID_symbol, .after = geneID) %>%
         calcFoldEnrich() %>%
         as.enrichdat()
-    } else if (keyType == "ENTREZID") {
+
+    } else if(keyType == "ENTREZID"){
       egmt <- egmt %>%
         dplyr::mutate(geneID_symbol = new_geneID) %>%
         dplyr::relocate(geneID_symbol, .after = geneID) %>%
         calcFoldEnrich() %>%
         as.enrichdat()
+
     } else {
       # input other types (including alias)
-      old_geneID <- replace_id(id_dat2, egmt$geneID)
+      old_geneID <- replace_id(id_dat2,egmt$geneID)
 
       egmt <- egmt %>%
         dplyr::mutate(geneID = old_geneID) %>%
@@ -135,23 +139,21 @@ importCP <- function(object,
     }
 
     ### save as list
-    egmt <- egmt %>% dplyr::select(-GeneRatio)
-    genelist_df <- data.frame(ID = names(genelist), logfc = genelist)
-    exponent <- data.frame(exponent = exponent)
-    org <- data.frame(org = ens_org)
+    egmt = egmt %>% dplyr::select(-GeneRatio)
+    genelist_df = data.frame(ID = names(genelist), logfc = genelist)
+    exponent = data.frame(exponent = exponent)
+    org = data.frame(org = ens_org)
 
-    new_obj <- list(gsea_df = egmt, genelist = genelist_df, geneset = geneset, exponent = exponent, org = org)
+    new_obj <- list(gsea_df = egmt, genelist = genelist_df, geneset = geneset,  exponent = exponent, org = org)
   }
 
   #---- IMPORT OTHER ---#
   # e.g. KEGG/DO/WikiPathways
-  if (type == "other") {
-    if (is.null(object@organism)) object@organism <- "human"
+  if(type == 'other'){
+    if(is.null(object@organism)) object@organism = 'human'
     ens_org <- mapEnsOrg(object@organism)
     keg <- as.data.frame(object)
-    id <- strsplit(keg$geneID, "\\/") %>%
-      unlist() %>%
-      unique()
+    id <- strsplit(keg$geneID,'\\/') %>% unlist() %>% unique()
     keyType <- gentype(id = id, org = ens_org)
 
     old_id <- id
@@ -166,18 +168,19 @@ importCP <- function(object,
 
     ### get geneID_symbol ---#
     # new id
-    new_geneID <- get_symbol(keg$geneID, ens_org)
+    new_geneID <- get_symbol(keg$geneID,ens_org)
 
     # input SYMBOL and no alias
-    if (keyType == "SYMBOL" & identical(old_id, id)) {
+    if( keyType == "SYMBOL" & identical(old_id, id) ){
       new_keg <- keg %>%
         dplyr::mutate(geneID = new_geneID) %>%
         # dplyr::relocate(geneID, .after = geneID) %>%
         calcFoldEnrich() %>%
         as.enrichdat()
-    } else if (keyType == "SYMBOL" & !identical(old_id, id)) {
-      old_geneID <- replace_id(id_dat2, keg$geneID) %>%
-        replace_id(id_dat1, .)
+
+    } else if(keyType == "SYMBOL" & !identical(old_id, id)){
+      old_geneID <- replace_id(id_dat2,keg$geneID) %>%
+        replace_id(id_dat1,.)
 
       new_keg <- keg %>%
         dplyr::mutate(geneID = old_geneID) %>%
@@ -185,15 +188,17 @@ importCP <- function(object,
         dplyr::relocate(geneID_symbol, .after = geneID) %>%
         calcFoldEnrich() %>%
         as.enrichdat()
-    } else if (keyType == "ENTREZID") {
+
+    } else if(keyType == "ENTREZID"){
       new_keg <- keg %>%
         dplyr::mutate(geneID_symbol = new_geneID) %>%
         dplyr::relocate(geneID_symbol, .after = geneID) %>%
         calcFoldEnrich() %>%
         as.enrichdat()
+
     } else {
       # input other types (including alias)
-      old_geneID <- replace_id(id_dat2, keg$geneID)
+      old_geneID <- replace_id(id_dat2,keg$geneID)
 
       new_keg <- keg %>%
         dplyr::mutate(geneID = old_geneID) %>%
@@ -206,6 +211,7 @@ importCP <- function(object,
     #--- add rich factor ---#
     new_obj <- new_keg %>%
       dplyr::mutate(RichFactor = Count / as.numeric(sub("/\\d+", "", BgRatio)))
+
   }
 
 
@@ -213,5 +219,5 @@ importCP <- function(object,
 }
 
 utils::globalVariables(c(
-  "genelist", "geneset", "gs_name"
+  "genelist", "geneset", "gs_name","geneID"
 ))
