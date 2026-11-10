@@ -1,4 +1,19 @@
-Package ‘genekitr’ was removed from the CRAN repository. Therefore, I copied the latest version (1.2.5) for easy download from CRAN.
+> **About this repository**
+>
+> `genekitr2` is a maintained copy of **genekitr 1.2.5** (CRAN, published 2023-09-07; original author Yunze Liu, GPL-3, upstream <https://github.com/GangLiLab/genekitr>). It is **not** a verbatim copy: it was compared file by file with the `genekitr_1.2.5.tar.gz` source from the CRAN archive, and the data files (`data/*.rda`) are identical. Main differences:
+>
+> - **Renamed to `genekitr2`** (`Package:` in DESCRIPTION, `genekitr::` references in messages and the per-user data directory `tools::R_user_dir("genekitr2")`), so it can be installed next to the CRAN package.
+> - **`genGSEA()`**: the result table adds `all_enriched_geneID` / `all_enriched_count` (all genes of the gene set that are present in the input gene list), and the former `geneID` / `Count` columns are renamed `core_enriched_geneID` / `core_enriched_count`.
+> - **`gentype()`** is exported.
+> - `FoldEnrich`: an existing `FoldEnrich` column in the input is used as is instead of being recomputed from `GeneRatio` / `BgRatio`.
+> - `importCP()` (GSEA input) checks that `reshape2` is installed before use.
+> - The start-up welcome and citation message (`.onAttach`) is removed.
+> - Examples of `genORA()` / `genGSEA()` write downloaded gene sets to `tempdir()`; the examples of `plotEnrich()`, `plotGSEA()`, `plotVolcano()` and `transProbe()` are removed from the help pages.
+> - The R code is reformatted (styler-style whitespace and quotes) and the Rd files are regenerated with roxygen2 7.3.1.
+>
+> Everything else follows genekitr 1.2.5. Please cite the original work: Liu, Y., Li, G. Empowering biologists to decode omics data: the Genekitr R package and web server. *BMC Bioinformatics* 24, 214 (2023). <https://doi.org/10.1186/s12859-023-05342-9>.
+>
+> Note: genekitr has been published on CRAN again (version 1.3.0, 2026-10-09; versions 1.2.7 and 1.2.8 are in the CRAN archive). This copy is not synchronised with those releases; for the current upstream version use `install.packages("genekitr")`.
 
 <img src="https://github.com/GangLiLab/genekitr/assets/34302878/b7337c2c-076a-46e8-9777-b2dfb742d613" align="left" width="200"/>
 
